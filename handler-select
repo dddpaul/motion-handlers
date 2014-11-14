@@ -1,0 +1,29 @@
+#!/bin/sh
+usage="$0 <up/down>"
+[ "$#" -lt 1 ] && { echo $usage; exit 1; }
+
+ECHO_CMD=$( which toilet )
+if [ -n "$ECHO_CMD" ]; then
+    ECHO_CMD="$ECHO_CMD -f big -k --gay"
+else
+    ECHO_CMD=echo
+fi
+
+SYMLINK=on_event_start
+
+cd /etc/motion/handlers
+CURRENT=$( file $SYMLINK | awk '{print $5}' | tr -d \`\' )
+
+case "$1" in
+    up)
+        NEXT=$( ls -l *.sh | grep -v $SYMLINK | grep -B1 $CURRENT | grep -v $CURRENT | awk '{print $NF}' )
+        ;;
+    down)
+        NEXT=$( ls -l *.sh | grep -v $SYMLINK | grep -A1 $CURRENT | grep -v $CURRENT | awk '{print $NF}' )
+        ;;
+esac
+
+if [ -n "$NEXT" ]; then
+    ln -snf $NEXT $SYMLINK
+    $ECHO_CMD ${NEXT%.*}
+fi
